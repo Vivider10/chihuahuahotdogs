@@ -14,11 +14,11 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Kindred POS — Quick Counter Checkout',
+        title: 'Chihuahua POS - Quick Counter Checkout',
       },
       {
         name: 'description',
-        content: 'A fast, friendly point of sale with first responder discounts.',
+        content: 'A fast & frank POS',
       },
     ],
   }),
