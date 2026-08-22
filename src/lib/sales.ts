@@ -41,11 +41,17 @@ export const PRODUCT_COGS: Record<string, number> = {
 const SALES_KEY = 'chihuahua-pos-sales-v1'
 const ARCHIVE_KEY = 'chihuahua-pos-day-archives-v1'
 
+// RP server date: use the user's real local month/day, but always display/store the year as 1995.
+// This keeps daily sales rolling over at the user's local midnight while preserving the server's 1995 timeline.
 export function getDateKey(date = new Date()) {
-  const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+  return `1995-${month}-${day}`
+}
+
+export function formatRpDate(dateKey: string) {
+  const [, month, day] = dateKey.split('-')
+  return `${month}-${day}-1995`
 }
 
 function read<T>(key: string, fallback: T): T {
