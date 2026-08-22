@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import '../business-theme.css'
 import BusinessDashboard from '../components/BusinessDashboard'
 
 export const Route = createFileRoute('/business')({
@@ -6,5 +7,5 @@ export const Route = createFileRoute('/business')({
 })
 
 function Business() {
-  return <BusinessDashboard />
+  return <div className="business-page"><BusinessDashboard /></div>
 }
