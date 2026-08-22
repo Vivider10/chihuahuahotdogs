@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { BadgeCheck, Building2, Coffee, Cookie, CreditCard, Minus, Moon, Plus, ReceiptText, Search, ShoppingBag, Sparkles, Sun, Trash2, Utensils, X } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { PRODUCT_COGS, recordSale } from '../lib/sales'
@@ -20,6 +20,8 @@ const menuItems: MenuItem[] = [
 ]
 const categories = ['All', 'Hotdogs', 'Snacks', 'Drinks']
 const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+const ORDER_NUMBER_KEY = 'chihuahua-pos-next-order-number'
+const DEFAULT_ORDER_NUMBER = 1847
 
 export default function PointOfSale() {
   const [theme, setTheme] = useState<Theme>('dark')
@@ -30,17 +32,15 @@ export default function PointOfSale() {
   const [customName, setCustomName] = useState('')
   const [customPrice, setCustomPrice] = useState('')
   const [notice, setNotice] = useState('')
-
-  useEffect(() => {
-    const refresh = () => setNotice((current) => current)
-    window.addEventListener('storage', refresh)
-    return () => window.removeEventListener('storage', refresh)
-  }, [])
+  const [orderNumber, setOrderNumber] = useState(() => {
+    if (typeof window === 'undefined') return DEFAULT_ORDER_NUMBER
+    const saved = Number(window.localStorage.getItem(ORDER_NUMBER_KEY))
+    return Number.isFinite(saved) && saved >= DEFAULT_ORDER_NUMBER ? saved : DEFAULT_ORDER_NUMBER
+  })
 
   const filteredItems = menuItems.filter((item) => (category === 'All' || item.category === category) && item.name.toLowerCase().includes(query.toLowerCase()))
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart])
   const total = subtotal
-  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   const addItem = (item: MenuItem) => {
     setNotice('')
@@ -67,6 +67,11 @@ export default function PointOfSale() {
     recordSale(cart.map((item) => ({ id: item.id, name: item.name, price: item.price, cogs: PRODUCT_COGS[item.name] ?? 0, quantity: item.quantity })), total)
     setNotice(`Sale completed for ${currency.format(total)}. Business totals updated.`)
     setCart([])
+    setOrderNumber((current) => {
+      const next = current + 1
+      window.localStorage.setItem(ORDER_NUMBER_KEY, String(next))
+      return next
+    })
   }
 
   return (
@@ -93,7 +98,7 @@ export default function PointOfSale() {
         </section>
 
         <aside className="order-panel">
-          <div className="order-heading"><div><p className="eyebrow">CURRENT ORDER</p><h2>Order #{String(1847 + itemCount).padStart(4, '0')}</h2></div>{cart.length > 0 && <button className="clear-button" onClick={() => setCart([])}><Trash2 size={16} /> Clear</button>}</div>
+          <div className="order-heading"><div><p className="eyebrow">CURRENT ORDER</p><h2>Order #{String(orderNumber).padStart(4, '0')}</h2></div>{cart.length > 0 && <button className="clear-button" onClick={() => setCart([])}><Trash2 size={16} /> Clear</button>}</div>
           <div className="cart-list">{cart.length === 0 ? <div className="empty-cart"><div className="empty-illustration"><ShoppingBag size={35} strokeWidth={1.4} /><span className="empty-plus"><Plus size={15} /></span></div><h3>Your counter is clear</h3><p>Tap an item to begin this order.</p></div> : cart.map((item) => <div className="cart-row" key={item.id}><div className="cart-item-copy"><strong>{item.name}</strong><span>{currency.format(item.price)} each</span></div><div className="quantity-control"><button onClick={() => changeQuantity(item.id, -1)} aria-label={`Remove one ${item.name}`}><Minus size={14} /></button><span>{item.quantity}</span><button onClick={() => changeQuantity(item.id, 1)} aria-label={`Add one ${item.name}`}><Plus size={14} /></button></div><strong className="line-total">{currency.format(item.price * item.quantity)}</strong></div>)}</div>
           <div className="checkout-area"><div className="totals"><div><span>Subtotal</span><strong>{currency.format(subtotal)}</strong></div><div className="grand-total"><span>Total</span><strong>{currency.format(total)}</strong></div></div><button className="charge-button" disabled={!cart.length} onClick={completeSale}><CreditCard size={21} /><span>Charge {currency.format(total)}</span><span className="arrow">→</span></button></div>
         </aside>
