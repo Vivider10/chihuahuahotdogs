@@ -21,17 +21,17 @@ const menuItems: MenuItem[] = [
 const categories = ['All', 'Hotdogs', 'Snacks', 'Drinks']
 const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 const ORDER_NUMBER_KEY = 'chihuahua-pos-next-order-number'
+const THEME_KEY = 'chihuahua-pos-theme'
 const DEFAULT_ORDER_NUMBER = 1847
 const FIRST_RESPONDER_DISCOUNT = 0.10
 
-// RP pricing rule: the 10% first-responder discount is rounded to the nearest whole dollar.
-// Math.round uses standard nearest-dollar rounding (e.g. $5.60 -> $6).
-function roundToDollar(amount: number) {
-  return Math.round(amount)
-}
+function roundToDollar(amount: number) { return Math.round(amount) }
 
 export default function PointOfSale() {
-  const [theme, setTheme] = useState<Theme>('dark')
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === 'undefined') return 'dark'
+    return window.localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark'
+  })
   const [cart, setCart] = useState<CartItem[]>([])
   const [category, setCategory] = useState('All')
   const [query, setQuery] = useState('')
@@ -50,6 +50,12 @@ export default function PointOfSale() {
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart])
   const discount = firstResponder ? roundToDollar(subtotal * FIRST_RESPONDER_DISCOUNT) : 0
   const total = Math.max(0, subtotal - discount)
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark'
+    setTheme(next)
+    window.localStorage.setItem(THEME_KEY, next)
+  }
 
   const addItem = (item: MenuItem) => {
     setNotice('')
@@ -93,20 +99,17 @@ export default function PointOfSale() {
         </div>
         <div className="topbar-actions">
           <Link className="theme-toggle" to="/business"><Building2 size={18} /><span>Business</span></Link>
-          <button className="theme-toggle" onClick={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}<span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span></button>
+          <button className="theme-toggle" onClick={toggleTheme} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}<span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span></button>
           <div className="shift-status"><span /> Register open</div>
         </div>
       </header>
-
       {notice && <div className="success-toast" role="status"><BadgeCheck size={20} /> {notice}<button onClick={() => setNotice('')} aria-label="Dismiss notification"><X size={17} /></button></div>}
-
       <div className="workspace">
         <section className="catalog-panel">
           <div className="catalog-heading"><div><p className="eyebrow">QUICK SALE</p><h2>What can we get started?</h2></div><button className="custom-item-button" onClick={() => setShowCustomItem(true)}><Plus size={18} /> Custom item</button></div>
           <div className="catalog-tools"><div className="category-tabs" aria-label="Product categories">{categories.map((name) => <button key={name} className={category === name ? 'active' : ''} onClick={() => setCategory(name)}>{name}</button>)}</div><label className="search-field"><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find an item" aria-label="Find an item" /></label></div>
           <div className="product-grid">{filteredItems.map((item, index) => { const Icon = item.icon; return <button className={`product-card ${item.color}`} key={item.id} onClick={() => addItem(item)} style={{ animationDelay: `${index * 45}ms` }}><span className="product-icon"><Icon size={25} strokeWidth={1.8} /></span><span className="product-copy"><strong>{item.name}</strong><small>{item.description}</small></span><span className="product-price">{currency.format(item.price)}</span><span className="add-indicator"><Plus size={16} /></span></button> })}</div>
         </section>
-
         <aside className="order-panel">
           <div className="order-heading"><div><p className="eyebrow">CURRENT ORDER</p><h2>Order #{String(orderNumber).padStart(4, '0')}</h2></div>{cart.length > 0 && <button className="clear-button" onClick={() => { setCart([]); setFirstResponder(false) }}><Trash2 size={16} /> Clear</button>}</div>
           <div className="cart-list">{cart.length === 0 ? <div className="empty-cart"><div className="empty-illustration"><ShoppingBag size={35} strokeWidth={1.4} /><span className="empty-plus"><Plus size={15} /></span></div><h3>Your counter is clear</h3><p>Tap an item to begin this order.</p></div> : cart.map((item) => <div className="cart-row" key={item.id}><div className="cart-item-copy"><strong>{item.name}</strong><span>{currency.format(item.price)} each</span></div><div className="quantity-control"><button onClick={() => changeQuantity(item.id, -1)} aria-label={`Remove one ${item.name}`}><Minus size={14} /></button><span>{item.quantity}</span><button onClick={() => changeQuantity(item.id, 1)} aria-label={`Add one ${item.name}`}><Plus size={14} /></button></div><strong className="line-total">{currency.format(item.price * item.quantity)}</strong></div>)}</div>
@@ -121,7 +124,6 @@ export default function PointOfSale() {
           </div>
         </aside>
       </div>
-
       {showCustomItem && <div className="modal-backdrop" onMouseDown={() => setShowCustomItem(false)}><div className="custom-modal" role="dialog" aria-modal="true" aria-labelledby="custom-title" onMouseDown={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setShowCustomItem(false)} aria-label="Close"><X size={20} /></button><p className="eyebrow">OPEN ITEM</p><h2 id="custom-title">Add something custom</h2><p className="modal-description">Enter a name and price to add it directly to this order.</p><label>Item name<input autoFocus value={customName} onChange={(event) => setCustomName(event.target.value)} placeholder="Example: Catering deposit" /></label><label>Price<div className="price-input"><span>$</span><input type="number" min="0.01" step="0.01" value={customPrice} onChange={(event) => setCustomPrice(event.target.value)} placeholder="0.00" /></div></label><button className="modal-add" disabled={!customName.trim() || Number(customPrice) <= 0} onClick={addCustomItem}>Add to order</button></div></div>}
     </main>
   )
