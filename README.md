@@ -29,3 +29,5 @@ Open the local URL shown in the terminal. To create a production bundle, run `pn
 4. Review the total and select **Charge** to complete and clear the sale.
 
 The current version is a checkout calculator and does not process real payments or save sales after the page is refreshed.
+
+<!-- Netlify redeploy marker: 1995 RP POS -->
