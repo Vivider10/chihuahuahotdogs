@@ -3,8 +3,8 @@
 .business-page {
   --bg: #151310;
   --surface: #201d19;
-  --surface-raised: #2a2520;
-  --surface-soft: #322b24;
+  --raised: #2a2520;
+  --soft: #322b24;
   --text: #fff7e3;
   --muted: #b8aa94;
   --line: #443b31;
@@ -14,15 +14,44 @@
   --red-deep: #8f211d;
   --green: #6ba637;
   min-height: 100vh;
+  background: var(--bg);
   color: var(--text);
-  background-color: var(--bg);
-  background-image: linear-gradient(135deg, rgba(255,208,76,.045) 25%, transparent 25%), linear-gradient(315deg, rgba(255,208,76,.045) 25%, transparent 25%);
-  background-position: 0 0, 13px 13px;
-  background-size: 26px 26px;
   font-family: "Nunito Sans", sans-serif;
+  position: relative;
+  transition: background .2s ease, color .2s ease;
 }
 
+.business-page[data-theme="light"] {
+  --bg: #f4eee1;
+  --surface: #fffaf0;
+  --raised: #f0e5d1;
+  --soft: #e7dac3;
+  --text: #29231d;
+  --muted: #746957;
+  --line: #d3c3a9;
+  --yellow: #d99a16;
+  --yellow-deep: #a86e08;
+  --red: #bf332b;
+  --red-deep: #8d211c;
+  --green: #4e812d;
+}
+
+.business-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: .7;
+  background-image: linear-gradient(135deg, rgba(240,185,40,.045) 25%, transparent 25%), linear-gradient(315deg, rgba(240,185,40,.045) 25%, transparent 25%);
+  background-position: 0 0, 13px 13px;
+  background-size: 26px 26px;
+}
+
+.business-page[data-theme="light"]::before { opacity: .35; }
+
 .business-page main {
+  position: relative;
+  z-index: 1;
   background: transparent !important;
   color: var(--text) !important;
   font-family: "Nunito Sans", sans-serif !important;
@@ -40,7 +69,8 @@
 .business-page h2 { line-height: .98 !important; }
 .business-page p { color: var(--muted); }
 
-/* Translate the dashboard's existing inline palette to the register palette. */
+/* Dashboard was originally built with inline dark colors. These selectors let the
+   shared theme switch all of those surfaces cleanly without duplicating JSX. */
 .business-page [style*="#101313"],
 .business-page [style*="#191d1d"],
 .business-page [style*="#171b1b"],
@@ -50,10 +80,10 @@
 .business-page [style*="#1b211f"],
 .business-page [style*="#202724"],
 .business-page [style*="#262d2b"],
-.business-page [style*="#2b332f"] { background-color: var(--surface-raised) !important; }
+.business-page [style*="#2b332f"] { background-color: var(--raised) !important; }
 
 .business-page [style*="#1e2523"],
-.business-page [style*="#202b25"] { background-color: var(--surface-soft) !important; }
+.business-page [style*="#202b25"] { background-color: var(--soft) !important; }
 
 .business-page [style*="#303737"],
 .business-page [style*="#2e3534"],
@@ -81,21 +111,21 @@
 .business-page [style*="#929c98"] { color: var(--muted) !important; }
 
 .business-page [style*="#ff8d8d"] { color: #ffd4cd !important; }
-.business-page [style*="#7ce6a8"] { color: #8fc95b !important; }
+.business-page [style*="#7ce6a8"] { color: var(--green) !important; }
+
+.business-page[data-theme="light"] [style*="#ff8d8d"] { color: #a62f28 !important; }
 
 .business-page input {
   font-family: "Nunito Sans", sans-serif !important;
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
   border-radius: 12px 5px 12px 5px !important;
 }
 
 .business-page button,
-.business-page a {
-  font-family: "Nunito Sans", sans-serif !important;
-}
-
-.business-page button {
-  border-radius: 12px 5px 12px 5px !important;
-}
+.business-page a { font-family: "Nunito Sans", sans-serif !important; }
+.business-page button { border-radius: 12px 5px 12px 5px !important; }
 
 .business-page header {
   position: relative;
@@ -111,37 +141,48 @@
   bottom: -10px;
   height: 7px;
   background: var(--red);
-  box-shadow: none;
 }
 
-/* Buttons: same yellow/red hierarchy as the register. */
-.business-page button[style*="#f2c64d"] {
-  border: 2px solid #f7cf57 !important;
-  box-shadow: 0 5px 0 var(--yellow-deep) !important;
-  transition: transform .15s ease, box-shadow .15s ease !important;
+.business-theme-toggle {
+  position: fixed;
+  top: 18px;
+  right: 22px;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 2px solid var(--line);
+  border-radius: 12px 5px 12px 5px;
+  background: var(--surface);
+  color: var(--text);
+  font: 800 12px "Nunito Sans", sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--line);
+  transition: transform .15s ease, background .2s ease, color .2s ease;
 }
-.business-page button[style*="#f2c64d"]:hover { transform: translateY(-2px); box-shadow: 0 7px 0 var(--yellow-deep) !important; }
-.business-page button[style*="#351f20"] { color: #fff8e6 !important; background: var(--red) !important; border-color: #f05b52 !important; box-shadow: 0 4px 0 var(--red-deep) !important; }
+.business-theme-toggle:hover { transform: translateY(-2px); }
+.business-theme-toggle svg { color: var(--yellow); }
+
+.business-page [style*="borderRadius: 18"],
+.business-page [style*="borderRadius: 20"],
+.business-page [style*="borderRadius: 24"] { border-radius: 18px 7px 18px 7px !important; }
 
 .business-page table th {
   font-family: "Nunito Sans", sans-serif !important;
   color: var(--red) !important;
 }
-
-.business-page table tr:hover td { background: rgba(240,185,40,.045); }
-
-/* Main-page-style angular cards. */
-.business-page [style*="borderRadius: 18"],
-.business-page [style*="borderRadius: 20"],
-.business-page [style*="borderRadius: 24"] {
-  border-radius: 18px 7px 18px 7px !important;
-}
+.business-page table tr:hover td { background: color-mix(in srgb, var(--yellow) 7%, transparent); }
 
 .business-page [style*="boxShadow: '0 25px 70px"],
-.business-page [style*="boxShadow: '0 30px 90px"] {
-  box-shadow: 0 14px 28px rgba(0,0,0,.3) !important;
-}
+.business-page [style*="boxShadow: '0 30px 90px"] { box-shadow: 0 14px 28px rgba(0,0,0,.22) !important; }
+
+.business-page[data-theme="light"] [style*="boxShadow: '0 14px"] { box-shadow: 0 8px 18px rgba(76,55,28,.12) !important; }
+
+.business-page .business-theme-toggle + main { padding-top: 34px; }
 
 @media (max-width: 800px) {
   .business-page table { min-width: 760px !important; }
+  .business-theme-toggle span { display: none; }
+  .business-theme-toggle { padding: 10px; }
 }
